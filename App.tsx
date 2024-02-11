@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import {Button} from 'react-native';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -24,6 +25,13 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+
+// Import the crypto getRandomValues shim (**BEFORE** the shims)
+import "react-native-get-random-values";
+// Import the the ethers shims (**BEFORE** ethers)
+import "@ethersproject/shims";
+// Import Semaphore components
+import { Identity } from "@semaphore-protocol/identity";
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -55,6 +63,39 @@ function Section({children, title}: SectionProps): JSX.Element {
   );
 }
 
+async function onIdentityButtonPress() {
+  // The identity can be generated randomly.
+  const identity1 = new Identity();
+
+  // Deterministically from a secret message.
+  //const identity2 = new Identity("secret-message");
+
+  // Or it can be retrieved from an existing identity.
+  //const identity3 = new Identity(identity1.toString());
+
+  // Trapdoor, nullifier and commitment are the attributes (e.g. JS getters).
+  //const { trapdoor, nullifier, commitment } = identity1;
+  console.log(`Trapdoor: ${identity1.trapdoor}`);
+  console.log(`Nullifier: ${identity1.nullifier}`);
+  console.log(`Commitment: ${identity1.commitment}`);
+}
+
+function IdentityButton(): JSX.Element {
+  const onPress = () => {
+    console.log('We will invoke identity creation here..!');
+    onIdentityButtonPress();
+    console.log('Invoked!');
+  };
+
+  return (
+    <Button
+      title="Click to invoke your identity creation!"
+      color="#841584"
+      onPress={onPress}
+    />
+  );
+};
+
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -72,6 +113,7 @@ function App(): JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
+        <IdentityButton/>
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
