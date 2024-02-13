@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import {Button} from 'react-native';
+import {NativeModules, Button} from 'react-native';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -64,20 +64,26 @@ function Section({children, title}: SectionProps): JSX.Element {
 }
 
 async function onIdentityButtonPress() {
-  // The identity can be generated randomly.
-  const identity1 = new Identity();
+  const {SemaphoreEnclaveModule} = NativeModules;
+  console.log(SemaphoreEnclaveModule);
 
-  // Deterministically from a secret message.
-  //const identity2 = new Identity("secret-message");
+  const idAlias = 'account.001';
+  
+  console.log('Try to authenticate');
+  await SemaphoreEnclaveModule.authenticate(idAlias); 
+  console.log('Authentication invoked');
 
-  // Or it can be retrieved from an existing identity.
-  //const identity3 = new Identity(identity1.toString());
+  // create key pair first
+  let keyPair = await SemaphoreEnclaveModule.createKeyPair(idAlias);
+  console.log(`A key pair for alias ${idAlias} has been generated with public key: ${keyPair.publicKey}`);
 
-  // Trapdoor, nullifier and commitment are the attributes (e.g. JS getters).
-  //const { trapdoor, nullifier, commitment } = identity1;
-  console.log(`Trapdoor: ${identity1.trapdoor}`);
-  console.log(`Nullifier: ${identity1.nullifier}`);
-  console.log(`Commitment: ${identity1.commitment}`);
+  // deterministically create identity from a secret message
+  let identityString = await SemaphoreEnclaveModule.createSecuredIdentityString(idAlias);
+  console.log(`An identity string for alias: ${idAlias} has been generated: ${identityString.base}`);
+  const identity = new Identity(identityString.base);
+  console.log(`Trapdoor: ${identity.trapdoor}`);
+  console.log(`Nullifier: ${identity.nullifier}`);
+  console.log(`Commitment: ${identity.commitment}`);
 }
 
 function IdentityButton(): JSX.Element {
@@ -89,7 +95,7 @@ function IdentityButton(): JSX.Element {
 
   return (
     <Button
-      title="Click to invoke your identity creation!"
+      title="Click to create a new secured identity!"
       color="#841584"
       onPress={onPress}
     />

@@ -12,6 +12,9 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		658AC90E2B7BD1760006B438 /* RCTSemaphoreEnclaveError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658AC90D2B7BD1760006B438 /* RCTSemaphoreEnclaveError.swift */; };
+		65BDC32A2B7B3DE100C67114 /* RCTSemaphoreEnclaveModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BDC3292B7B3DE100C67114 /* RCTSemaphoreEnclaveModule.swift */; };
+		65BDC32C2B7B5B9000C67114 /* RCTSemaphoreEnclaveModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 65BDC32B2B7B5B9000C67114 /* RCTSemaphoreEnclaveModule.m */; };
 		7699B88040F8A987B510C191 /* libPods-circuitbreaker2024-circuitbreaker2024Tests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-circuitbreaker2024-circuitbreaker2024Tests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
@@ -41,6 +44,10 @@
 		5709B34CF0A7D63546082F79 /* Pods-circuitbreaker2024.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-circuitbreaker2024.release.xcconfig"; path = "Target Support Files/Pods-circuitbreaker2024/Pods-circuitbreaker2024.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-circuitbreaker2024-circuitbreaker2024Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-circuitbreaker2024-circuitbreaker2024Tests.debug.xcconfig"; path = "Target Support Files/Pods-circuitbreaker2024-circuitbreaker2024Tests/Pods-circuitbreaker2024-circuitbreaker2024Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-circuitbreaker2024.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-circuitbreaker2024.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		658AC90D2B7BD1760006B438 /* RCTSemaphoreEnclaveError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RCTSemaphoreEnclaveError.swift; sourceTree = "<group>"; };
+		65BDC3282B7B3DE100C67114 /* circuitbreaker2024-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "circuitbreaker2024-Bridging-Header.h"; sourceTree = "<group>"; };
+		65BDC3292B7B3DE100C67114 /* RCTSemaphoreEnclaveModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RCTSemaphoreEnclaveModule.swift; sourceTree = "<group>"; };
+		65BDC32B2B7B5B9000C67114 /* RCTSemaphoreEnclaveModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTSemaphoreEnclaveModule.m; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = circuitbreaker2024/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-circuitbreaker2024-circuitbreaker2024Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-circuitbreaker2024-circuitbreaker2024Tests.release.xcconfig"; path = "Target Support Files/Pods-circuitbreaker2024-circuitbreaker2024Tests/Pods-circuitbreaker2024-circuitbreaker2024Tests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -92,6 +99,10 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				65BDC3292B7B3DE100C67114 /* RCTSemaphoreEnclaveModule.swift */,
+				658AC90D2B7BD1760006B438 /* RCTSemaphoreEnclaveError.swift */,
+				65BDC32B2B7B5B9000C67114 /* RCTSemaphoreEnclaveModule.m */,
+				65BDC3282B7B3DE100C67114 /* circuitbreaker2024-Bridging-Header.h */,
 			);
 			name = circuitbreaker2024;
 			sourceTree = "<group>";
@@ -207,7 +218,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1420;
 					};
 				};
 			};
@@ -413,7 +424,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
+				65BDC32A2B7B3DE100C67114 /* RCTSemaphoreEnclaveModule.swift in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				65BDC32C2B7B5B9000C67114 /* RCTSemaphoreEnclaveModule.m in Sources */,
+				658AC90E2B7BD1760006B438 /* RCTSemaphoreEnclaveError.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,6 +446,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 5B7EB9410499542E8C5724F5 /* Pods-circuitbreaker2024-circuitbreaker2024Tests.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -459,6 +474,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 89C6BE57DB24E9ADA2F236DE /* Pods-circuitbreaker2024-circuitbreaker2024Tests.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
 				INFOPLIST_FILE = circuitbreaker2024Tests/Info.plist;
@@ -500,6 +516,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = circuitbreaker2024;
+				SWIFT_OBJC_BRIDGING_HEADER = "circuitbreaker2024-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -526,6 +543,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = circuitbreaker2024;
+				SWIFT_OBJC_BRIDGING_HEADER = "circuitbreaker2024-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
