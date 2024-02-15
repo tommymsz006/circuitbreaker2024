@@ -26,7 +26,7 @@ import { Identity } from "@semaphore-protocol/identity";
 // Import others
 import { ethers } from "ethers";
 //import { Presets } from "userop";
-import { SimpleAccount } from './src/builder/simpleAccount';
+import { PrivacyAccount } from './src/builder/privacyAccount';
 
 async function onIdentityButtonPress() {
 }
@@ -85,7 +85,7 @@ function SmartContractAccountButton(): JSX.Element {
     setIsInProgress(true);
     if (process.env.ERC4337_ACCOUNT_SIGNING_KEY && process.env.NODE_RPC_URL) {
       console.log(`We're about to create a new smart contract wallet via node RPC ${process.env.NODE_RPC_URL}`);
-      const account = await SimpleAccount.init(
+      const account = await PrivacyAccount.init(
         new ethers.Wallet(process.env.ERC4337_ACCOUNT_SIGNING_KEY),
         process.env.NODE_RPC_URL
       );

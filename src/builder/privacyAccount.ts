@@ -1,22 +1,28 @@
 import { BigNumberish, BytesLike, ethers } from "ethers";
 import { UserOperationBuilder, BundlerJsonRpcProvider, Constants, Presets, EOASigner, IPresetBuilderOpts, UserOperationMiddlewareFn } from "userop";
 import {
-  EntryPoint,
-  EntryPoint__factory,
-  SimpleAccountFactory,
-  SimpleAccountFactory__factory,
-  SimpleAccount as SimpleAccountImpl,
-  SimpleAccount__factory,
-} from "../typechain";
+  PrivacyAccountFactory,
+  PrivacyAccount as PrivacyAccountImpl,
+} from "../../contracts/typechain-types/contracts"
+import {
+  PrivacyAccountFactory__factory,
+  PrivacyAccount__factory,
+} from "../../contracts/typechain-types/factories/contracts";
+import {
+  IEntryPoint
+} from "../../contracts/typechain-types/@account-abstraction/contracts/interfaces";
+import {
+  IEntryPoint__factory
+} from "../../contracts/typechain-types/factories/@account-abstraction/contracts/interfaces";
 
-export class SimpleAccount extends UserOperationBuilder {
+export class PrivacyAccount extends UserOperationBuilder {
   private signer: EOASigner;
   private provider: ethers.providers.JsonRpcProvider;
-  private entryPoint: EntryPoint;
-  private factory: SimpleAccountFactory;
+  private entryPoint: IEntryPoint;
+  private factory: PrivacyAccountFactory;
   private initCode: string;
   private nonceKey: number;
-  proxy: SimpleAccountImpl;
+  proxy: PrivacyAccountImpl;
 
   private constructor(
     signer: EOASigner,
@@ -28,17 +34,17 @@ export class SimpleAccount extends UserOperationBuilder {
     this.provider = new BundlerJsonRpcProvider(rpcUrl).setBundlerRpc(
       opts?.overrideBundlerRpc
     );
-    this.entryPoint = EntryPoint__factory.connect(
+    this.entryPoint = IEntryPoint__factory.connect(
       opts?.entryPoint || Constants.ERC4337.EntryPoint,
       this.provider
     );
-    this.factory = SimpleAccountFactory__factory.connect(
+    this.factory = PrivacyAccountFactory__factory.connect(
       opts?.factory || Constants.ERC4337.SimpleAccount.Factory,
       this.provider
     );
     this.initCode = "0x";
     this.nonceKey = opts?.nonceKey || 0;
-    this.proxy = SimpleAccount__factory.connect(
+    this.proxy = PrivacyAccount__factory.connect(
       ethers.constants.AddressZero,
       this.provider
     );
@@ -57,8 +63,8 @@ export class SimpleAccount extends UserOperationBuilder {
     signer: EOASigner,
     rpcUrl: string,
     opts?: IPresetBuilderOpts
-  ): Promise<SimpleAccount> {
-    const instance = new SimpleAccount(signer, rpcUrl, opts);
+  ): Promise<PrivacyAccount> {
+    const instance = new PrivacyAccount(signer, rpcUrl, opts);
 
     try {
       instance.initCode = await ethers.utils.hexConcat([
@@ -75,7 +81,7 @@ export class SimpleAccount extends UserOperationBuilder {
       const addr = error?.errorArgs?.sender;
       if (!addr) throw error;
 
-      instance.proxy = SimpleAccount__factory.connect(addr, instance.provider);
+      instance.proxy = PrivacyAccount__factory.connect(addr, instance.provider);
     }
 
     const base = instance
