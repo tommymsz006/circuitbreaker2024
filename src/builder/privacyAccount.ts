@@ -39,7 +39,7 @@ export class PrivacyAccount extends UserOperationBuilder {
       this.provider
     );
     this.factory = PrivacyAccountFactory__factory.connect(
-      opts?.factory || Constants.ERC4337.SimpleAccount.Factory,
+      opts?.factory || Constants.ERC4337.SimpleAccount.Factory, // fallback to simple account if factory address is not provided
       this.provider
     );
     this.initCode = "0x";

@@ -1,22 +1,15 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const entryPointAddress = process.env.ENTRY_POINT_ADDRESS;
+  console.log(`Contract EntryPoint is located at ${entryPointAddress} on network ${network.name}.`);
 
-  const lockedAmount = ethers.parseEther("0.001");
-
-  const lock = await ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
-
-  await lock.waitForDeployment();
-
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+  if (entryPointAddress) {
+    const PrivacyAccountFactory = await ethers.getContractFactory("PrivacyAccountFactory");
+    const factory = await PrivacyAccountFactory.deploy(entryPointAddress);
+    await factory.deployed();
+    console.log(`PrivacyAccountFactory is deployed at ${factory.address} on network ${network.name}.`);
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

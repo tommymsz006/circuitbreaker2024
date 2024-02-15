@@ -84,10 +84,12 @@ function SmartContractAccountButton(): JSX.Element {
   const onPress = async() => {
     setIsInProgress(true);
     if (process.env.ERC4337_ACCOUNT_SIGNING_KEY && process.env.NODE_RPC_URL) {
-      console.log(`We're about to create a new smart contract wallet via node RPC ${process.env.NODE_RPC_URL}`);
+      console.log(`We're about to create a new smart contract wallet via node RPC '${process.env.NODE_RPC_URL}' with factory address '${process.env.PRIVACY_ACCOUNT_FACTORY_ADDRESS}'`);
+      const opts = process.env.PRIVACY_ACCOUNT_FACTORY_ADDRESS ? { factory: process.env.PRIVACY_ACCOUNT_FACTORY_ADDRESS } : {};
       const account = await PrivacyAccount.init(
         new ethers.Wallet(process.env.ERC4337_ACCOUNT_SIGNING_KEY),
-        process.env.NODE_RPC_URL
+        process.env.NODE_RPC_URL,
+        opts
       );
       console.log(`Wallet address is ${account.getSender()}`);
     } else {
