@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "npx hardhat clean",
+    "compile": "npx hardhat compile",
     "deploy": "npx hardhat run scripts/deploy.ts"
   },
   "author": "",
@@ -12,6 +14,7 @@
   "devDependencies": {
     "@account-abstraction/contracts": "^0.6.0",
     "@openzeppelin/contracts": "^5.0.1",
+    "@semaphore-protocol/contracts": "^4.0.0-alpha.8",
     "hardhat": "^2.20.0"
   },
   "dependencies": {

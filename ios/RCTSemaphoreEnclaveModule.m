@@ -10,13 +10,8 @@
 
 @interface RCT_EXTERN_MODULE(RCTSemaphoreEnclaveModule, NSObject)
 
-// createSecuredIdentityString()
-RCT_EXTERN_METHOD(createSecuredIdentityString:(NSString)idAlias
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
-
-// createKeyPair()
-RCT_EXTERN_METHOD(createKeyPair:(NSString)idAlias
+// createSecuredIdMessage()
+RCT_EXTERN_METHOD(createSecuredIdMessage:(NSString)idAlias
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 

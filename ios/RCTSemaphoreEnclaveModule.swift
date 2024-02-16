@@ -8,6 +8,12 @@
 import Foundation
 import LocalAuthentication
 
+extension Data {
+  func toHexString() -> String {
+    return "0x" + self.map { String(format: "%02hhx", $0) }.joined()
+  }
+}
+
 @objc(RCTSemaphoreEnclaveModule)
 class RCTSemaphoreEnclaveModule: NSObject {
   
@@ -15,8 +21,8 @@ class RCTSemaphoreEnclaveModule: NSObject {
   static let TAG_PREFIX: String = "com.circuitbreaker2024."
   
   /// prepare a secured, randomized identity string
-  @objc(createSecuredIdentityString:resolver:rejecter:)
-  func createSecuredIdentityString(
+  @objc(createSecuredIdMessage:resolver:rejecter:)
+  func createSecuredIdMessage(
     _ idAlias: NSString,
     resolver resolve: RCTPromiseResolveBlock,
     rejecter reject: RCTPromiseRejectBlock
@@ -27,8 +33,8 @@ class RCTSemaphoreEnclaveModule: NSObject {
     if status == errSecSuccess {
       let byteData = Data(bytes: bytes, count: bytes.count)
       do {
-        let encryptedData = try encryptData(idAlias: idAlias, plainText: byteData as CFData)
-        resolve(["base": byteData.base64EncodedString(), "encrypted": encryptedData])
+        let encryptedData = try createKeyPairAndEncryptData(idAlias, byteData)
+        resolve(["idMessageHex": byteData.toHexString(), "encryptedIdMessageHex": encryptedData.toHexString()])
       } catch let error {
         reject(nil, error.localizedDescription, error)
       }
@@ -41,14 +47,10 @@ class RCTSemaphoreEnclaveModule: NSObject {
     }
   }
   
-  /// create key pair
-  // TODO: integrate with createSecuredIdentityString as one step
-  @objc(createKeyPair:resolver:rejecter:)
-  func createKeyPair(
+  /// internal function to create key pair
+  private func createKeyPairAndEncryptData(
     _ idAlias: NSString,
-    resolver resolve: RCTPromiseResolveBlock,
-    rejecter reject: RCTPromiseRejectBlock
-  ) -> Void {
+    _ plainText: Data) throws -> Data {
     let access = SecAccessControlCreateWithFlags(
       kCFAllocatorDefault,
       kSecAttrAccessibleWhenUnlockedThisDeviceOnly, // kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
@@ -74,24 +76,29 @@ class RCTSemaphoreEnclaveModule: NSObject {
       attributes[kSecAttrTokenID as String] = kSecAttrTokenIDSecureEnclave
     #endif
 
+    /// create a randomized private key
     var error: Unmanaged<CFError>?
     guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error) else {
-        let err = error!.takeRetainedValue() as Error
-        reject(nil, "Key pair cannot be generated: " + err.localizedDescription, err)
-        return
+      throw error!.takeRetainedValue() as Error
     }
     
+    /// extract public key
     guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
-        reject(nil, "Public key cannot be extracted", nil)
-        return
+      throw RCTSemaphoreEnclaveError.customError("Public key cannot be extracted")
     }
     
-    guard let publicKeyExternal = SecKeyCopyExternalRepresentation(publicKey, &error) else {
-        reject(nil, "External representation of the public key cannot be obtained", nil)
-        return
+    /// check if algorithm is supported
+    guard SecKeyIsAlgorithmSupported(publicKey, .encrypt, RCTSemaphoreEnclaveModule.ENCRYPTION_ALGORITHM) else {
+      throw RCTSemaphoreEnclaveError.customError("The given algorithm is not supported")
+    }
+
+    /// encrypt the given piece of data
+    let cipherText = SecKeyCreateEncryptedData(publicKey, RCTSemaphoreEnclaveModule.ENCRYPTION_ALGORITHM, plainText as CFData, &error)
+    guard cipherText != nil else {
+      throw error!.takeRetainedValue() as Error
     }
     
-    resolve(["publicKey": addHeaderForPublicKey(pubKeyData: publicKeyExternal as Data).base64EncodedString()]);
+      return cipherText! as Data
   }
   
   /// authenticate with biometric method
@@ -162,7 +169,7 @@ class RCTSemaphoreEnclaveModule: NSObject {
     
     return publicKey
   }
-  
+  /*
   /// private function to encrypt data
   private func encryptData(
     idAlias: NSString,
@@ -184,14 +191,5 @@ class RCTSemaphoreEnclaveModule: NSObject {
     
     return (cipherText! as Data).base64EncodedString()
   }
-}
-
-
-/// add header for public key external representation
-func addHeaderForPublicKey(pubKeyData: Data) -> Data {
-  let HEADER = Data(_: [
-      0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06,
-      0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00
-  ])
-  return HEADER + pubKeyData
+  */
 }

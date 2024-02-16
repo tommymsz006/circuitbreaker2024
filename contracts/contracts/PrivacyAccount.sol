@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.23;
 
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable no-inline-assembly */
@@ -11,17 +11,25 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import "@account-abstraction/contracts/core/BaseAccount.sol";
+
+import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
+
 import "./TokenCallbackHandler.sol";
 
 contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
+    uint256 public constant DEFAULT_GROUP_ID = 0x2A3B4C5D6E7F;
+
     address public owner;
+    bytes public encryptedIdMessage;
+    uint256 public idCommitment;
 
     IEntryPoint private immutable _entryPoint;
+    ISemaphore private immutable _semaphore;
 
-    event PrivacyAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
+    event PrivacyAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner, uint256 idCommitment);
 
     modifier onlyOwner() {
         _onlyOwner();
@@ -32,11 +40,16 @@ contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, I
         return _entryPoint;
     }
 
+    function semaphore() public view virtual returns (ISemaphore) {
+        return _semaphore;
+    }
+
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(IEntryPoint anEntryPoint) {
+    constructor(IEntryPoint anEntryPoint, ISemaphore aSemaphore) {
         _entryPoint = anEntryPoint;
+        _semaphore = aSemaphore;
         _disableInitializers();
     }
 
@@ -57,13 +70,19 @@ contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, I
         }
     }
 
-    function initialize(address anOwner) public virtual initializer {
-        _initialize(anOwner);
+    function initialize(address anOwner, bytes calldata anEncryptedIdMessage, uint256 anIdCommitment) public virtual initializer {
+        _initialize(anOwner, anEncryptedIdMessage, anIdCommitment);
     }
 
-    function _initialize(address anOwner) internal virtual {
+    function _initialize(address anOwner, bytes calldata anEncryptedIdMessage, uint256 anIdCommitment) internal virtual {
         owner = anOwner;
-        emit PrivacyAccountInitialized(_entryPoint, owner);
+        encryptedIdMessage = anEncryptedIdMessage;
+        idCommitment = anIdCommitment;
+
+        // add the given identity commitment to the default group
+        //_semaphore.addMember(DEFAULT_GROUP_ID, idCommitment);
+        
+        emit PrivacyAccountInitialized(_entryPoint, owner, idCommitment);
     }
 
     function _requireFromEntryPointOrOwner() internal view {

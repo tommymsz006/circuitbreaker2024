@@ -62,16 +62,21 @@ export class PrivacyAccount extends UserOperationBuilder {
   public static async init(
     signer: EOASigner,
     rpcUrl: string,
+    encryptedIdMessageHex: string,
+    idCommittment: bigint,
     opts?: IPresetBuilderOpts
   ): Promise<PrivacyAccount> {
     const instance = new PrivacyAccount(signer, rpcUrl, opts);
 
+    //console.log([signer, rpcUrl, encryptedIdMessageHex, idCommittment, opts]);
     try {
       instance.initCode = await ethers.utils.hexConcat([
         instance.factory.address,
         instance.factory.interface.encodeFunctionData("createAccount", [
           await instance.signer.getAddress(),
-          ethers.BigNumber.from(opts?.salt ?? 0),
+          encryptedIdMessageHex,
+          idCommittment,
+          ethers.BigNumber.from(opts?.salt ?? 0)
         ]),
       ]);
       await instance.entryPoint.callStatic.getSenderAddress(instance.initCode);
