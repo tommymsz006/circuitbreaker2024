@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable no-inline-assembly */
@@ -12,7 +12,8 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import "@account-abstraction/contracts/core/BaseAccount.sol";
 
-import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
+//import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
+import "./ISemaphore.sol";
 
 import "./TokenCallbackHandler.sol";
 
