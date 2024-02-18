@@ -1,3 +1,5 @@
+import { NativeModules } from 'react-native';
+
 import { BigNumberish, BytesLike, ethers } from "ethers";
 import { UserOperationBuilder, BundlerJsonRpcProvider, Constants, Presets, EOASigner, IPresetBuilderOpts, UserOperationMiddlewareFn } from "userop";
 import {
@@ -15,6 +17,17 @@ import {
   IEntryPoint__factory
 } from "../../contracts/typechain-types/factories/@account-abstraction/contracts/interfaces";
 
+
+// ====== Semaphore imports ======
+// Import the crypto getRandomValues shim (**BEFORE** the shims)
+import "react-native-get-random-values";
+// Import the the ethers shims (**BEFORE** ethers)
+import "@ethersproject/shims";
+// Import Semaphore components
+import { Identity } from "@semaphore-protocol/identity";
+import { Group } from "@semaphore-protocol/group";
+import { generateProof } from '@semaphore-protocol/proof';
+
 export class PrivacyAccount extends UserOperationBuilder {
   private signer: EOASigner;
   private provider: ethers.providers.JsonRpcProvider;
@@ -22,11 +35,16 @@ export class PrivacyAccount extends UserOperationBuilder {
   private factory: PrivacyAccountFactory;
   private initCode: string;
   private nonceKey: number;
+  private identity: Identity;
+  private encryptedIdMessageHex: string;
   proxy: PrivacyAccountImpl;
 
   private constructor(
     signer: EOASigner,
     rpcUrl: string,
+    factoryAddress: string,
+    identity: Identity,
+    encryptedIdMessageHex: string,
     opts?: IPresetBuilderOpts
   ) {
     super();
@@ -39,7 +57,7 @@ export class PrivacyAccount extends UserOperationBuilder {
       this.provider
     );
     this.factory = PrivacyAccountFactory__factory.connect(
-      opts?.factory || Constants.ERC4337.SimpleAccount.Factory, // fallback to simple account if factory address is not provided
+      opts?.factory || factoryAddress,
       this.provider
     );
     this.initCode = "0x";
@@ -48,6 +66,8 @@ export class PrivacyAccount extends UserOperationBuilder {
       ethers.constants.AddressZero,
       this.provider
     );
+    this.identity = identity;
+    this.encryptedIdMessageHex = encryptedIdMessageHex;
   }
 
   private resolveAccount: UserOperationMiddlewareFn = async (ctx) => {
@@ -62,20 +82,56 @@ export class PrivacyAccount extends UserOperationBuilder {
   public static async init(
     signer: EOASigner,
     rpcUrl: string,
-    encryptedIdMessageHex: string,
-    idCommittment: bigint,
+    factoryAddress: string,
+    idAlias: string,
+    inputEncryptedIdMessageHex?: string,
+    inputIdCommittment?: bigint,
     opts?: IPresetBuilderOpts
   ): Promise<PrivacyAccount> {
-    const instance = new PrivacyAccount(signer, rpcUrl, opts);
+    
+    // === create identity from semaphore ===
+    const {SemaphoreEnclaveModule} = NativeModules;
+    console.log(SemaphoreEnclaveModule);
+    
+    console.log('Try to authenticate');
+    //await SemaphoreEnclaveModule.authenticate(idAlias); 
+    console.log('Authentication invoked');
 
-    //console.log([signer, rpcUrl, encryptedIdMessageHex, idCommittment, opts]);
+    let idMessageHex: string;
+    let encryptedIdMessageHex: string;
+    if (inputEncryptedIdMessageHex) {
+      // retrieve (decrypt) the identity message from encrypted data
+      encryptedIdMessageHex = inputEncryptedIdMessageHex;
+      idMessageHex = await SemaphoreEnclaveModule.retrieveSecuredIdMessage(idAlias, encryptedIdMessageHex);
+      console.log(`An identity message for alias: ${idAlias} has been retrieved:`);
+      console.log(`Raw: '${idMessageHex}', Encrypted: '${encryptedIdMessageHex}'`);
+    } else {
+      // deterministically create identity from a secret message
+      let idMessage = await SemaphoreEnclaveModule.createSecuredIdMessage(idAlias);
+      console.log(`An identity message for alias: ${idAlias} has been generated:`);
+      console.log(`Raw: '${idMessage.idMessageHex}', Encrypted: '${idMessage.encryptedIdMessageHex}'`);
+      idMessageHex = idMessage.idMessageHex;
+      encryptedIdMessageHex = idMessage.encryptedIdMessageHex;
+    }
+
+    const identity = new Identity(btoa(String.fromCharCode(...ethers.utils.arrayify(idMessageHex)))); // base64-encoded string
+    console.log(`Trapdoor: ${identity.trapdoor}`);
+    console.log(`Nullifier: ${identity.nullifier}`);
+    console.log(`Commitment: ${identity.commitment}`);
+
+    if (inputIdCommittment && inputIdCommittment != identity.commitment) {
+      throw new Error("The input identity committment does not match the generated one");
+    }
+    // === finished creating identity from semaphore ===
+
+    const instance = new PrivacyAccount(signer, rpcUrl, factoryAddress, identity, encryptedIdMessageHex, opts);
+
     try {
       instance.initCode = await ethers.utils.hexConcat([
         instance.factory.address,
         instance.factory.interface.encodeFunctionData("createAccount", [
           await instance.signer.getAddress(),
           encryptedIdMessageHex,
-          idCommittment,
           ethers.BigNumber.from(opts?.salt ?? 0)
         ]),
       ]);
@@ -106,15 +162,54 @@ export class PrivacyAccount extends UserOperationBuilder {
     return withPM.useMiddleware(Presets.Middleware.signUserOpHash(instance.signer));
   }
 
-  execute(to: string, value: BigNumberish, data: BytesLike) {
-    return this.setCallData(
-      this.proxy.interface.encodeFunctionData("execute", [to, value, data])
+  async execute(to: string, value: BigNumberish, data: BytesLike) {
+    const proof = await this.generateProofToExecute();
+    return this
+      .setSignature(
+        ethers.utils.defaultAbiCoder.encode([ "uint256", "uint256[8]" ], [ proof.nullifierHash, proof.proof ])
+      )
+      .setCallData(
+        this.proxy.interface.encodeFunctionData("execute", [to, value, data])
+      );
+  }
+
+  async executeBatch(to: Array<string>, data: Array<BytesLike>) {
+    const proof = await this.generateProofToExecute();
+    return this
+    .setSignature(
+      ethers.utils.defaultAbiCoder.encode([ "uint256", "uint256[8]" ], [ proof.nullifierHash, proof.proof ])
+    )
+    .setCallData(
+      this.proxy.interface.encodeFunctionData("executeBatch", [to, data])
     );
   }
 
-  executeBatch(to: Array<string>, data: Array<BytesLike>) {
-    return this.setCallData(
-      this.proxy.interface.encodeFunctionData("executeBatch", [to, data])
-    );
+  private async generateProofToExecute() {
+    // reconstruct single user group
+    const group = new Group(BigInt(this.getSender()));
+    group.addMember(this.identity.commitment);
+
+    console.log(`Generating proof using group ID '${group.id}'...`);
+    // generate ZK proof here
+    /*
+    return {
+      nullifierHash: 0n,
+      proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]
+    }
+    */
+    
+    return generateProof(
+        this.identity,
+        group,
+        this.getNonce(),
+        0);
+  }
+
+  public getEncryptedIdMessageHex(): string {
+    return this.encryptedIdMessageHex;
+  }
+
+  public getIdCommitment(): bigint {
+    return this.identity.commitment;
   }
 }

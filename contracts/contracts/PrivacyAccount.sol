@@ -12,25 +12,20 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import "@account-abstraction/contracts/core/BaseAccount.sol";
 
-//import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
-import "./ISemaphore.sol";
-
+import "./IPrivacyAccountFactory.sol";
 import "./TokenCallbackHandler.sol";
 
 contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    uint256 public constant DEFAULT_GROUP_ID = 0x2A3B4C5D6E7F;
-
     address public owner;
     bytes public encryptedIdMessage;
-    uint256 public idCommitment;
 
     IEntryPoint private immutable _entryPoint;
-    ISemaphore private immutable _semaphore;
+    IPrivacyAccountFactory private immutable _factory;
 
-    event PrivacyAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner, uint256 idCommitment);
+    event PrivacyAccountInitialized(IEntryPoint indexed entryPoint, IPrivacyAccountFactory indexed factory, address indexed owner);
 
     modifier onlyOwner() {
         _onlyOwner();
@@ -41,16 +36,16 @@ contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, I
         return _entryPoint;
     }
 
-    function semaphore() public view virtual returns (ISemaphore) {
-        return _semaphore;
+    function factory() public view returns (IPrivacyAccountFactory) {
+        return _factory;
     }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(IEntryPoint anEntryPoint, ISemaphore aSemaphore) {
+    constructor(IEntryPoint anEntryPoint, IPrivacyAccountFactory aFactory) {
         _entryPoint = anEntryPoint;
-        _semaphore = aSemaphore;
+        _factory = aFactory;
         _disableInitializers();
     }
 
@@ -71,19 +66,15 @@ contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, I
         }
     }
 
-    function initialize(address anOwner, bytes calldata anEncryptedIdMessage, uint256 anIdCommitment) public virtual initializer {
-        _initialize(anOwner, anEncryptedIdMessage, anIdCommitment);
+    function initialize(address anOwner, bytes calldata anEncryptedIdMessage) public virtual initializer {
+        _initialize(anOwner, anEncryptedIdMessage);
     }
 
-    function _initialize(address anOwner, bytes calldata anEncryptedIdMessage, uint256 anIdCommitment) internal virtual {
+    function _initialize(address anOwner, bytes calldata anEncryptedIdMessage) internal virtual {
         owner = anOwner;
         encryptedIdMessage = anEncryptedIdMessage;
-        idCommitment = anIdCommitment;
 
-        // add the given identity commitment to the default group
-        //_semaphore.addMember(DEFAULT_GROUP_ID, idCommitment);
-        
-        emit PrivacyAccountInitialized(_entryPoint, owner, idCommitment);
+        emit PrivacyAccountInitialized(_entryPoint, _factory, owner);
     }
 
     function _requireFromEntryPointOrOwner() internal view {
@@ -92,11 +83,16 @@ contract PrivacyAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, I
 
     function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
     internal override virtual returns (uint256 validationData) {
+        _factory.verifySignature(userOp.signature, getNonce()); // revert if failed
+        return 0;
+
         // for public transaction, it has to be signed by the owner
+        /*
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (owner != hash.recover(userOp.signature))
             return SIG_VALIDATION_FAILED;
         return 0;
+        */
     }
 
     function _call(address target, uint256 value, bytes memory data) internal {

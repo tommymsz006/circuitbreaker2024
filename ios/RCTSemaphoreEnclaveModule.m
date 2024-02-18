@@ -20,6 +20,12 @@ RCT_EXTERN_METHOD(authenticate:(NSString)idAlias
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+// retrieveSecuredIdMessage()
+RCT_EXTERN_METHOD(retrieveSecuredIdMessage:(NSString)idAlias
+                  encryptedDataHex:(NSString)encryptedDataHex
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 // run in the background queue
 + (BOOL)requiresMainQueueSetup
 {

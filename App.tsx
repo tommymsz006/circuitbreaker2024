@@ -15,6 +15,7 @@ import { CreateIdentityButton } from "./src/components/CreateIdentityButton";
 import { ClearIdentityButton } from "./src/components/ClearIdentityButton";
 import { FetchIdentityButton } from './src/components/FetchIdentityButton';
 import { DataService, Identity } from './src/services/DataService';
+import { ExecuteButton } from './src/components/ExecuteButton';
 
 function App(): JSX.Element {
   const [identity, setIdentity] = useState<Identity>({
@@ -39,13 +40,14 @@ function App(): JSX.Element {
         <Text></Text>
         <Text></Text>
         <Card size="md" variant="elevated" m="$3">
-          <Heading mb="$1" size="lg">Welcome to circuitbreaker2024!</Heading>
-          <Text size="sm">Create your own privacy-first wallet</Text>
+          <Heading mb="$1" size="lg">Welcome to Semaphore Wallet!</Heading>
+          <Text size="sm">Create your own privacy-first wallet for transactions and anonymous signaling</Text>
         </Card>
         <Divider my="$0.5"/>
-        <CreateIdentityButton onRefresh={fetchIdentity}/>
-        <ClearIdentityButton onRefresh={fetchIdentity}/>
+        { identity.walletAddress ? null : <CreateIdentityButton onRefresh={fetchIdentity}/> }
+        { identity.walletAddress ? <ClearIdentityButton onRefresh={fetchIdentity}/> : null }
         <FetchIdentityButton onRefresh={fetchIdentity}/>
+        { identity.walletAddress ? <ExecuteButton/> : null }
         <AddressBar address={identity.walletAddress}/>
       </VStack>
     </GluestackUIProvider>

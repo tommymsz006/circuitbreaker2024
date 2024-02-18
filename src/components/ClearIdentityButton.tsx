@@ -31,7 +31,7 @@ export function ClearIdentityButton(props: ClearIdentityProps): JSX.Element {
       <Button
         size="md"
         variant="solid"
-        action="primary"
+        action="negative"
         isDisabled={isInProgress}
         isFocusVisible={false}
         onPress={onPress}
