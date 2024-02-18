@@ -1,5 +1,12 @@
 import { NativeModules } from 'react-native';
 
+// ====== ethers import ====== 
+// Import the crypto getRandomValues shim (**BEFORE** the shims)
+import "react-native-get-random-values";
+// Import the the ethers shims (**BEFORE** ethers)
+import "@ethersproject/shims";
+// Import Semaphore components
+
 import { BigNumberish, BytesLike, ethers } from "ethers";
 import { UserOperationBuilder, BundlerJsonRpcProvider, Constants, Presets, EOASigner, IPresetBuilderOpts, UserOperationMiddlewareFn } from "userop";
 import {
@@ -19,13 +26,9 @@ import {
 
 
 // ====== Semaphore imports ======
-// Import the crypto getRandomValues shim (**BEFORE** the shims)
-import "react-native-get-random-values";
-// Import the the ethers shims (**BEFORE** ethers)
-import "@ethersproject/shims";
-// Import Semaphore components
 import { Identity } from "@semaphore-protocol/identity";
 import { Group } from "@semaphore-protocol/group";
+import { SemaphoreEthers } from "@semaphore-protocol/data";
 import { generateProof } from '@semaphore-protocol/proof';
 
 export class PrivacyAccount extends UserOperationBuilder {
@@ -185,24 +188,26 @@ export class PrivacyAccount extends UserOperationBuilder {
   }
 
   private async generateProofToExecute() {
-    // reconstruct single user group
-    const group = new Group(BigInt(this.getSender()));
-    group.addMember(this.identity.commitment);
+    // reconstruct group
+    if (process.env.NETWORK && process.env.SEMAPHORE_ADDRESS && process.env.PRIVACY_ACCOUNT_FACTORY_ADDRESS) {
+      const semaphore = new SemaphoreEthers(process.env.NETWORK, {
+        address: process.env.SEMAPHORE_ADDRESS
+      });
 
-    console.log(`Generating proof using group ID '${group.id}'...`);
-    // generate ZK proof here
-    /*
-    return {
-      nullifierHash: 0n,
-      proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]
-    }
-    */
-    
-    return generateProof(
+      const members = await semaphore.getGroupMembers(process.env.PRIVACY_ACCOUNT_FACTORY_ADDRESS);
+      const group = new Group(BigInt(process.env.PRIVACY_ACCOUNT_FACTORY_ADDRESS));
+      members.map((member: string) => group.addMember(member));
+
+      console.log(`Generating proof using group ID '${group.id}' with ${group.members.length} member(s)...`);
+      
+      return generateProof(
         this.identity,
         group,
         this.getNonce(),
         0);
+    } else {
+      throw new Error('No network, semaphore address and/or privacy account address defined');
+    }
   }
 
   public getEncryptedIdMessageHex(): string {

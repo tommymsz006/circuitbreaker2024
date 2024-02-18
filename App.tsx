@@ -13,7 +13,8 @@ import { config } from '@gluestack-ui/config';
 import { AddressBar } from "./src/components/AddressBar";
 import { CreateIdentityButton } from "./src/components/CreateIdentityButton";
 import { ClearIdentityButton } from "./src/components/ClearIdentityButton";
-import { FetchIdentityButton } from './src/components/FetchIdentityButton';
+import { DeployContractButton } from './src/components/DeployContractButton';
+import { BalanceSection } from "./src/components/BalanceSection";
 import { DataService, Identity } from './src/services/DataService';
 import { ExecuteButton } from './src/components/ExecuteButton';
 
@@ -44,11 +45,14 @@ function App(): JSX.Element {
           <Text size="sm">Create your own privacy-first wallet for transactions and anonymous signaling</Text>
         </Card>
         <Divider my="$0.5"/>
+        <BalanceSection/>
+        <Divider my="$0.5"/>
         { identity.walletAddress ? null : <CreateIdentityButton onRefresh={fetchIdentity}/> }
         { identity.walletAddress ? <ClearIdentityButton onRefresh={fetchIdentity}/> : null }
-        <FetchIdentityButton onRefresh={fetchIdentity}/>
+        { identity.walletAddress ? <DeployContractButton/> : null }
         { identity.walletAddress ? <ExecuteButton/> : null }
-        <AddressBar address={identity.walletAddress}/>
+        <Divider my="$0.5"/>
+        <AddressBar walletAddress={identity.walletAddress} idCommitment={identity.idCommitment}/>
       </VStack>
     </GluestackUIProvider>
   );

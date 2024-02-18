@@ -12,28 +12,45 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { Utils } from '../utils/Utils';
 
 type AddressBarProps = {
-  address: string | null
+  walletAddress: string | null,
+  idCommitment: bigint | null
 }
 
 export function AddressBar(props: AddressBarProps): JSX.Element {
-  const [copiedText, setCopiedText] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [idCommitment, setIdCommitment] = useState('');
 
-  const copyToClipboard = () => {
-    Clipboard.setString(props.address || '(Identity has not been created)');
+  const copyAddressToClipboard = () => {
+    Clipboard.setString(props.walletAddress || '(Identity has not been created)');
+  };
 
+  const copyIdCommitmentToClipboard = () => {
+    Clipboard.setString(props.idCommitment?.toString() || '(Identity has not been created)');
   };
 
   return (
     <Center>
       <HStack space="md">
-        <Text>{Utils.truncate(props.address, 28)}</Text>
+        <Text>Address: {Utils.truncate(props.walletAddress, 14)}</Text>
         <Button
           size="xs"
           variant="outline"
           action="primary"
           isDisabled={false}
           isFocusVisible={false}
-          onPress={copyToClipboard}>
+          onPress={copyAddressToClipboard}>
+          <ButtonIcon as={CopyIcon} />
+        </Button>
+      </HStack>
+      <HStack space="md">
+        <Text>ID Commitment: {Utils.truncate(props.idCommitment ? props.idCommitment.toString() : null, 14)}</Text>
+        <Button
+          size="xs"
+          variant="outline"
+          action="primary"
+          isDisabled={false}
+          isFocusVisible={false}
+          onPress={copyIdCommitmentToClipboard}>
           <ButtonIcon as={CopyIcon} />
         </Button>
       </HStack>

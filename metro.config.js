@@ -7,7 +7,9 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
  * @type {import('metro-config').MetroConfig}
  */
 const config = {
+  /*
   resetCache: true,
+  */
   resolver: {
     unstable_enablePackageExports: true,
     unstable_conditionNames: ['module', 'import', 'require'],
